@@ -14,7 +14,7 @@ Developed in Rust using the MTProto library [grammers](https://github.com/Lonami
 
 ## Preparing and running
 
-Rename `config.toml.sample` to `config.toml` and fill with your data like: <br>
+Rename or copy `config.toml.sample` to `config.toml` and fill with your data like: <br>
 ```toml
 [grammers]
 api_id = 1234567
