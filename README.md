@@ -24,7 +24,7 @@ bot_token = "1234567890:A8BCD3Ef7ghijk1LmNO9pQr5stuvwX2Yz0A"
 
 Run the bot with: <br>
 ```bash
-cargo run
+cargo run --release
 ```
 
 ## License
