@@ -1,0 +1,8 @@
+# Personal files
+Cargo.lock
+config.toml
+*.session*
+*.db3*
+
+# Byte pre-compiled
+/target
