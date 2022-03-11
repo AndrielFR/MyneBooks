@@ -1,13 +1,13 @@
 [package]
-name = "bookete"
+name = "myne_books"
 version = "0.1.0"
 authors = ["Andriel Ferreira <andrielkogama2@gmail.com>"]
 license = "MIT"
 description = """
 A bot to read or download books without leaving Telegram.
 """
-homepage = "https://github.com/AndrielFR/Bookete"
-repository = "https://github.com/AndrielFR/bookete"
+homepage = "https://github.com/AndrielFR/MyneBooks"
+repository = "https://github.com/AndrielFR/MyneBooks"
 keywords = ["telegram", "bot", "grammers", "book"]
 categories = []
 edition = "2021"
@@ -15,6 +15,7 @@ edition = "2021"
 [dependencies]
 grammers-client = { git = "https://github.com/Lonami/grammers", features = ["html"] }
 grammers-session = { git = "https://github.com/Lonami/grammers" }
+grammers-tl-types = { git = "https://github.com/Lonami/grammers" }
 tokio = { version = "^1.17.0", features = ["macros", "sync", "rt", "rt-multi-thread", "signal"] }
 rusqlite = "^0.26.3"
 log = { version = "^0.4.14", features = ["std"] }
@@ -22,3 +23,4 @@ log4rs = "^1.0.0"
 toml = "^0.5.8"
 serde_derive = "^1.0"
 serde = { version = "^1.0", features = ["derive"] }
+macro_rules_attribute = "*"

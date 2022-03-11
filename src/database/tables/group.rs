@@ -10,25 +10,25 @@ use crate::database;
 
 
 #[derive(Debug, Clone)]
-pub struct User {
-    // Telegram user ID
+pub struct Group {
+    // Telegram group ID
     id: i64,
-    // Telegram user name
-    name: String,
-    // Bot user language
+    // Telegram group title
+    title: String,
+    // Bot group language
     language: String,
 }
 
-impl User {
-    // Create the `users` table
+impl Group {
+    // Create the `groups` table
     pub fn create() -> Result<(), Error> {
         let dbc = database::connect().unwrap();
         let conn = dbc.get_conn();
         
         let sql = "
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS groups (
                 id         INTEGER PRIMARY KEY,
-                name       TEXT NOT NULL,
+                title      TEXT NOT NULL,
                 language   VARCHAR(5) NOT NULL DEFAULT \"en\"
         )
         ";
@@ -38,45 +38,45 @@ impl User {
         Ok(())
     }
     
-    // Register a `user`
-    pub fn register(id: i64, name: String, language: Option<&str>) -> Result<(), Error> {
+    // Register a `group`
+    pub fn register(id: i64, title: &str) -> Result<(), Error> {
         let dbc = database::connect().unwrap();
         let conn = dbc.get_conn();
         
         let sql = "
-        INSERT INTO users (id, name, language) VALUES (?, ?, ?)
+        INSERT INTO groups (id, title) VALUES (?, ?)
         ";
         
-        conn.execute(sql, params![id, name, language]);
+        conn.execute(sql, params![id, title]);
         
         Ok(())
     }
     
-    // Get a `user` by id
+    // Get a `group` by id
     pub fn get(id: i64) -> Result<Self, Error> {
         let dbc = database::connect().unwrap();
         let conn = dbc.get_conn();
         
         let sql = "
-        SELECT * FROM users WHERE id = ?
+        SELECT * FROM groups WHERE id = ?
         ";
     
         conn.query_row(sql, params![id], |row| {
             Ok(Self {
                 id: row.get(0).unwrap(),
-                name: row.get(1).unwrap(),
+                title: row.get(1).unwrap(),
                 language: row.get(2).unwrap(),
             })
         })
     }
     
-    // Delete a `user` by id
+    // Delete a `group` by id
     pub fn delete(id: i64) -> Result<(), Error> {
         let dbc = database::connect().unwrap();
         let conn = dbc.get_conn();
         
         let sql = "
-        DELETE FROM users WHERE id = ?
+        DELETE FROM groups WHERE id = ?
         ";
         
         conn.execute(sql, params![id]);

@@ -16,8 +16,9 @@ use grammers_session::Session;
 use tokio::{runtime, task};
 use serde_derive::Deserialize;
 
-use bookete::database;
-use bookete::handle_update;
+use myne_books::handler;
+use myne_books::database;
+use myne_books::handle_update;
 
 
 #[derive(Debug, Deserialize)]
@@ -44,9 +45,8 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     let _handle = log4rs::init_config(config).unwrap();
     
     // Connect the database
-    let database_client = database::Client::load_file_or_create("./src/database/sqlite.db3".to_string())
-        .unwrap();
-    database_client.initialize();
+    let dbc = database::connect().unwrap();
+    dbc.initialize();
     
     // Get the configuration
     let mut toml_str = String::new();
@@ -60,7 +60,7 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     
     // Starts the bot
     let mut client = Client::connect(GConfig {
-        session: Session::load_file_or_create("bookete.session")?,
+        session: Session::load_file_or_create("myne_books.session")?,
         api_id: api_id,
         api_hash: api_hash.clone(),
         
@@ -74,22 +74,28 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     // Log in if haven't already
     if !client.is_authorized().await? {
         client.bot_sign_in(&bot_token, api_id, &api_hash).await?;
-        client.session().save_to_file("bookete.session")?;
+        client.session().save_to_file("myne_books.session")?;
     }
     
+    // Initialize the modules
+    let mut handler_list = Vec::new();
+    handler::initialize(&mut handler_list);
+
     // Handle the updates
     while let Some(update) = client.next_update().await? {
         let handle = client.clone();
+        let handle_list = handler_list.clone();
+        
         task::spawn(async move {
-            match handle_update(handle, update).await {
+            match handle_update(handle, update, handle_list).await {
                 Ok(_) => {}
-                Err(e) => eprintln!("Error handling updates!: {}", e),
+                Err(e) => eprintln!("Error handling updates!: {}", e)
             }
         });
     }
     
     // Save the session and exit
-    client.session().save_to_file("bookete.session")?;
+    client.session().save_to_file("myne_books.session")?;
     
     Ok(())
 }

@@ -4,11 +4,11 @@
   ~ SPDX-License-Identifier: MIT
   -->
 
-# Bookete - Telegram Bot
+# MyneBooks - Telegram Bot
 
-![License](https://img.shields.io/github/license/AndrielFR/Bookete)
+![License](https://img.shields.io/github/license/AndrielFR/MyneBooks)
 
-Bookete is a bot to read or download books without leaving Telegram.
+MyneBooks is a bot to read or download books without leaving Telegram.
 
 Developed in Rust using the MTProto library [grammers](https://github.com/Lonami/grammers).
 

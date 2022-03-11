@@ -14,18 +14,11 @@ pub struct Client {
 }
 
 impl Client {
-    // Open a new connection
-    pub fn load_file_or_create(path: String) -> Result<Self, Error> {
-        let conn = Connection::open(path).unwrap();
-        
-        Ok(Self {
-            connection: conn,
-        })
-    }
-    
     // Close the connection
     pub fn close(self) -> Result<(), Error> {
-        Ok(self.connection.close().unwrap())
+        self.connection.close().unwrap();
+        
+        Ok(())
     }
     
     // Get the connection
@@ -35,10 +28,19 @@ impl Client {
     
     // Create database tables if they do not exist
     pub fn initialize(&self) -> Result<(), Error> {
-        let conn = self.get_conn();
-        
-        tables::User::create(&conn);
+        tables::User::create().expect("Failed to create the `users` table");
+        tables::Group::create().expect("Failed to create the `groups` table");
         
         Ok(())
     }
+}
+
+// Open a new connection
+pub fn connect() -> Result<Client, Error> {
+    let path = "./src/database/sqlite.db3".to_string();
+    let conn = Connection::open(&path).unwrap();
+    
+    Ok(Client {
+        connection: conn,
+    })
 }
