@@ -24,3 +24,4 @@ toml = "^0.5.8"
 serde_derive = "^1.0"
 serde = { version = "^1.0", features = ["derive"] }
 macro_rules_attribute = "*"
+regex = "^1.5"

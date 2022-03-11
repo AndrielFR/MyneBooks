@@ -24,6 +24,7 @@ use myne_books::handle_update;
 #[derive(Debug, Deserialize)]
 struct TConfig {
     grammers: Grammers,
+    myne: Myne,
 }
 
 #[derive(Debug, Deserialize)]
@@ -31,6 +32,11 @@ struct Grammers {
     api_id: i32,
     api_hash: String,
     bot_token: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+struct Myne {
+    prefixes: Vec<String>,
 }
 
 async fn async_main() -> Result<(), Box<dyn Error>> {
@@ -57,6 +63,8 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     let api_id = decoded.grammers.api_id;
     let api_hash = decoded.grammers.api_hash;
     let bot_token = decoded.grammers.bot_token;
+    
+    let prefixes = decoded.myne.prefixes;
     
     // Starts the bot
     let mut client = Client::connect(GConfig {
@@ -85,9 +93,10 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     while let Some(update) = client.next_update().await? {
         let handle = client.clone();
         let handle_list = handler_list.clone();
+        let prefix = prefixes.clone();
         
         task::spawn(async move {
-            match handle_update(handle, update, handle_list).await {
+            match handle_update(handle, update, handle_list, prefix).await {
                 Ok(_) => {}
                 Err(e) => eprintln!("Error handling updates!: {}", e)
             }

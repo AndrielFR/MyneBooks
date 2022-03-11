@@ -17,10 +17,9 @@ async fn start<'fut>(data: &'fut Data) {
 
 
 pub fn initialize<'a>() -> Register<'a> {
-    let register = Register::new()
+    Register::new()
         .set_name("start")
         .set_enabled(true)
-        .append("message", start, "start", true, Some("Start the bot"), Some(false));
-    
-    register
+        .append("message", start, "start$", true, Some("Start the bot"), Some(false))
+        .build()
 }

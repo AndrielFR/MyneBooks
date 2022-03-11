@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2022 Andriel Ferreira <https://github.com/AndrielFR>
 
+#![allow(dead_code)]
 #![allow(unused_must_use)]
 #![allow(unused_variables)]
 
@@ -9,6 +10,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 use grammers_client::{Client, Update, types};
+use regex::Regex;
 use log::info;
 
 use crate::handlers;
@@ -66,6 +68,10 @@ impl<'a> Register<'a> {
             enabled: false,
             handler_list: vec![],
         }
+    }
+    
+    pub fn build(self) -> Self {
+        self
     }
     
     pub fn append(mut self, update_type: &'a str, function: AsyncFunction, pattern: &'a str, is_command: bool, description: Option<&'a str>, hide: Option<bool>) -> Self {
@@ -133,7 +139,7 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
     Ok(())
 }
 
-pub async fn handle_update<'a>(client: Client, update: Update, handler_list: Vec<Handler<'a>>) -> Result<(), Box<dyn Error>> {
+pub async fn handle_update<'a>(client: Client, update: Update, handler_list: Vec<Handler<'a>>, prefixes: Vec<String>) -> Result<(), Box<dyn Error>> {
     // let dbc = database::connect().unwrap();
     // let conn = dbc.get_conn();
     
@@ -160,17 +166,24 @@ pub async fn handle_update<'a>(client: Client, update: Update, handler_list: Vec
                 types::Chat::Channel(channel) => {}
             }
             
-            for handler in handler_list {
+            let message_handlers = handler_list.iter()
+                .filter(|handler| handler.update_type == "message");
+            for handler in message_handlers {
                 let function = handler.function;
                 let pattern = handler.pattern;
                 let is_command = handler.is_command;
                 
+                let data = Data {
+                    client: &client,
+                    message: message,
+                };
+                
                 if is_command {
-                    let data = Data {
-                        client: &client,
-                        message: message,
-                    };
-                    
+                    let pattern = format!("[{}]{}", prefixes.join(""), pattern).as_str();
+                }
+                
+                let re = Regex::new(pattern).unwrap();
+                if re.is_match(message.text()) {
                     function(&data).await;
                 }
             }

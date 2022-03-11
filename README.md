@@ -20,6 +20,9 @@ Rename or copy `config.toml.sample` to `config.toml` and fill with your data lik
 api_id = 1234567
 api_hash = "1z02nserl588a2tek491t74839941e29"
 bot_token = "1234567890:A8BCD3Ef7ghijk1LmNO9pQr5stuvwX2Yz0A"
+
+[myne]
+prefixes = ["!", "/", ";"]
 ```
 
 Run the bot with: <br>
