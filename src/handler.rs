@@ -139,7 +139,7 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
     Ok(())
 }
 
-pub async fn handle_update<'a>(client: Client, update: Update, handler_list: Vec<Handler<'a>>, prefixes: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list: Vec<Handler<'a>>, prefixes: Vec<String>, me: types::User) -> Result<(), Box<dyn Error>> {
     // let dbc = database::connect().unwrap();
     // let conn = dbc.get_conn();
     
@@ -170,20 +170,49 @@ pub async fn handle_update<'a>(client: Client, update: Update, handler_list: Vec
                 .filter(|handler| handler.update_type == "message");
             for handler in message_handlers {
                 let function = handler.function;
-                let pattern = handler.pattern;
                 let is_command = handler.is_command;
-                
-                let data = Data {
-                    client: &client,
-                    message: message,
-                };
+                let mut pattern = String::from(handler.pattern);
                 
                 if is_command {
-                    let pattern = format!("[{}]{}", prefixes.join(""), pattern).as_str();
+                    let mut has_final_line = false;
+                    
+                    if pattern.ends_with("$") {
+                        pattern.pop();
+                        has_final_line = true;
+                    }
+                    
+                    let pattern_clone = pattern.clone();
+                    let pattern_splitted: Vec<&str> = pattern_clone
+                        .split_whitespace()
+                        .collect();
+                    if pattern_splitted.len() > 1 {
+                        pattern.clear();
+                        pattern.push_str(&pattern_splitted[..1]
+                            .join(" "));
+                    }
+                    
+                    pattern.push_str(format!("(?:@{})?", me.username().unwrap()).as_str());
+                    
+                    pattern.insert_str(0, format!("[{}]", prefixes.join("")).as_str());
+                    
+                    let pattern_parts = &pattern_splitted[1..];
+                    for part in pattern_parts {
+                        pattern.push_str(format!(" {}", part).as_str());
+                    }
+                    
+                    if has_final_line {
+                        pattern.push_str("$");
+                    }
                 }
+                
+                let pattern = pattern.as_str();
                 
                 let re = Regex::new(pattern).unwrap();
                 if re.is_match(message.text()) {
+                    let data = Data {
+                        client: &mut client,
+                        message: message,
+                    };
                     function(&data).await;
                 }
             }

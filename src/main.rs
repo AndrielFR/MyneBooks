@@ -78,6 +78,7 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
         },
     })
     .await?;
+    let me_user = client.get_me().await?;
     
     // Log in if haven't already
     if !client.is_authorized().await? {
@@ -94,9 +95,10 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
         let handle = client.clone();
         let handle_list = handler_list.clone();
         let prefix = prefixes.clone();
+        let me = me_user.clone();
         
         task::spawn(async move {
-            match handle_update(handle, update, handle_list, prefix).await {
+            match handle_update(handle, update, handle_list, prefix, me).await {
                 Ok(_) => {}
                 Err(e) => eprintln!("Error handling updates!: {}", e)
             }
