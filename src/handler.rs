@@ -213,7 +213,7 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
 
                     pattern.push_str(format!("(?:@{})?", me.username().unwrap()).as_str());
 
-                    pattern.insert_str(0, format!("[{}]", prefixes.join("")).as_str());
+                    pattern.insert_str(0, format!("^[{}]", prefixes.join("")).as_str());
 
                     let pattern_parts = &pattern_splitted[1..];
                     for part in pattern_parts {
