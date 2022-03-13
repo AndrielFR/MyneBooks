@@ -41,19 +41,19 @@ struct Myne {
 
 async fn async_main() -> Result<(), Box<dyn Error>> {
     let stdout = ConsoleAppender::builder().build();
-    
+
     let config = Config::builder()
         .appender(Appender::builder()
         .build("stdout", Box::new(stdout)))
         .build(Root::builder().appender("stdout").build(LevelFilter::Info))
         .unwrap();
-    
+
     let _handle = log4rs::init_config(config).unwrap();
-    
+
     // Connect the database
     let dbc = database::connect().unwrap();
     dbc.initialize();
-    
+
     // Get the configuration
     let mut toml_str = String::new();
     File::open("config.toml")
@@ -63,15 +63,15 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     let api_id = decoded.grammers.api_id;
     let api_hash = decoded.grammers.api_hash;
     let bot_token = decoded.grammers.bot_token;
-    
+
     let prefixes = decoded.myne.prefixes;
-    
+
     // Starts the bot
     let mut client = Client::connect(GConfig {
         session: Session::load_file_or_create("myne_books.session")?,
         api_id: api_id,
         api_hash: api_hash.clone(),
-        
+
         params: InitParams {
             flood_sleep_threshold: Some(120),
             ..Default::default()
@@ -79,13 +79,13 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     })
     .await?;
     let me_user = client.get_me().await?;
-    
+
     // Sign in if haven't already
     if !client.is_authorized().await? {
         client.bot_sign_in(&bot_token, api_id, &api_hash).await?;
         client.session().save_to_file("myne_books.session")?;
     }
-    
+
     // Initialize the modules
     let mut handler_list = Vec::new();
     handler::initialize(&mut handler_list);
@@ -96,7 +96,7 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
         let handle_list = handler_list.clone();
         let prefix = prefixes.clone();
         let me = me_user.clone();
-        
+
         task::spawn(async move {
             match handle_update(handle, update, handle_list, prefix, me).await {
                 Ok(_) => {}
@@ -104,10 +104,10 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
             }
         });
     }
-    
+
     // Save the session and exit
     client.session().save_to_file("myne_books.session")?;
-    
+
     Ok(())
 }
 

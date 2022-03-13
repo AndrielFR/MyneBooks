@@ -3,7 +3,6 @@
 
 #![allow(dead_code)]
 #![allow(unused_must_use)]
-#![allow(unused_variables)]
 
 use std::error::Error;
 use std::future::Future;
@@ -41,8 +40,9 @@ macro_rules! dyn_async {(
 pub struct Data<'a> {
     pub client: &'a Client,
     pub message: Option<&'a types::Message>,
-    // pub callback: Option<&'a types::Callback>,
-    // pub inline: Option<&'a types::Inline>,
+    pub callback: Option<&'a types::CallbackQuery>,
+    // pub inline: Option<&'a types::InlineQuery>,
+    pub request: &'a str,
     pub language: language::I18n<'a>,
     pub me: &'a types::User,
 }
@@ -126,6 +126,7 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
 
     for plugin_register in vec![
         handlers::start::initialize(), // start.rs
+        handlers::about::initialize(),  // about.rs
     ] {
         if plugin_register.is_enabled() {
             info!("Loading plugin '{}'", plugin_register.get_name());
@@ -142,9 +143,10 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
 }
 
 pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list: Vec<Handler<'a>>, prefixes: Vec<String>, me: types::User) -> Result<(), Box<dyn Error>> {
+    let mut lang = language::I18n::default();
+
     match update {
         Update::NewMessage(ref message) if !message.outgoing() => {
-            let mut lang = language::I18n::default();
 
             let chat = message.chat();
             match chat {
@@ -168,7 +170,7 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
 
                     lang = language::from_group(group.id());
                 }
-                types::Chat::Channel(channel) => {}
+                types::Chat::Channel(_) => {}
             }
 
             let message_handlers = handler_list.iter()
@@ -211,12 +213,64 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
                 }
 
                 let pattern = pattern.as_str();
+                let request = message.text();
 
                 let re = Regex::new(pattern).unwrap();
-                if re.is_match(message.text()) {
+                if re.is_match(request) {
                     let data = Data {
                         client: &mut client,
                         message: Some(message),
+                        callback: None,
+                        request: request,
+                        language: lang,
+                        me: &me,
+                    };
+                    function(&data).await;
+                }
+            }
+        }
+        Update::CallbackQuery(ref callback) => {
+            let chat = callback.chat();
+            match chat {
+                types::Chat::User(user) => {
+                    match tables::User::get(user.id()) {
+                        Ok(_) => {}
+                        Err(_) => {
+                            tables::User::register(user.id(), user.full_name(), user.lang_code());
+                        }
+                    }
+
+                    lang = language::from_user(user.id());
+                }
+                types::Chat::Group(group) => {
+                    match tables::Group::get(group.id()) {
+                        Ok(_) => {}
+                        Err(_) => {
+                            tables::Group::register(group.id(), group.title());
+                        }
+                    }
+
+                    lang = language::from_group(group.id());
+                }
+                types::Chat::Channel(_) => {}
+            }
+
+            let callback_handlers = handler_list.iter()
+                .filter(|handler| handler.update_type == "callback");
+            for handler in callback_handlers {
+                let function = handler.function;
+                let pattern = handler.pattern;
+
+                let data = callback.data();
+                let request = std::str::from_utf8(data).unwrap();
+
+                let re = Regex::new(pattern).unwrap();
+                if re.is_match(request) {
+                    let data = Data {
+                        client: &mut client,
+                        message: None,
+                        callback: Some(callback),
+                        request: request,
                         language: lang,
                         me: &me,
                     };

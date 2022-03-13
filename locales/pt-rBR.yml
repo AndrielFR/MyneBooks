@@ -4,3 +4,10 @@ pt-rBR:
   texts:
     start: |
       Bem-vindo ao @{bot_username}, bot feito para aqueles que tem fome do saber, assim como a Myne.
+    about: |
+      <b>{bot_name}</b> é um bot desenvolvido em <i>Rust</i> com a biblioteca <b>MTProto Grammers</b>, feito para ser rápido, estável e completo quando se trata de livros.
+  buttons:
+    back:
+      Voltar 🔙 
+    about:
+      Sobre 👥

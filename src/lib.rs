@@ -10,6 +10,7 @@ i18n!("./locales");
 
 pub mod database;
 pub mod handler;
+pub mod utils;
 pub mod handlers;
 pub mod language;
 
