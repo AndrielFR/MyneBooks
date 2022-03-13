@@ -16,12 +16,17 @@ edition = "2021"
 grammers-client = { git = "https://github.com/Lonami/grammers", features = ["html"] }
 grammers-session = { git = "https://github.com/Lonami/grammers" }
 grammers-tl-types = { git = "https://github.com/Lonami/grammers" }
-tokio = { version = "^1.17.0", features = ["macros", "sync", "rt", "rt-multi-thread", "signal"] }
-rusqlite = "^0.26.3"
-log = { version = "^0.4.14", features = ["std"] }
-log4rs = "^1.0.0"
-toml = "^0.5.8"
+tokio = { version = "^1.17", features = ["macros", "sync", "rt", "rt-multi-thread", "signal"] }
+rusqlite = "^0.26"
+log = { version = "^0.4", features = ["std"] }
+log4rs = "^1.0"
+toml = "^0.5"
 serde_derive = "^1.0"
 serde = { version = "^1.0", features = ["derive"] }
 macro_rules_attribute = "*"
 regex = "^1.5"
+lazy_static = "^1.4"
+rust-i18n = "^0.5"
+
+[package.metadata.i18n]
+default-locale = "en-GB"

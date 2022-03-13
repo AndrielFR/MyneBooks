@@ -12,11 +12,11 @@ use crate::database;
 #[derive(Debug, Clone)]
 pub struct Group {
     // Telegram group ID
-    id: i64,
+    pub id: i64,
     // Telegram group title
-    title: String,
+    pub title: String,
     // Bot group language
-    language: String,
+    pub language: String,
 }
 
 impl Group {
@@ -29,7 +29,7 @@ impl Group {
         CREATE TABLE IF NOT EXISTS groups (
                 id         INTEGER PRIMARY KEY,
                 title      TEXT NOT NULL,
-                language   VARCHAR(5) NOT NULL DEFAULT \"en\"
+                language   VARCHAR(6) NOT NULL DEFAULT \"en-GB\"
         )
         ";
         

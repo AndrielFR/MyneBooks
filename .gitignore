@@ -6,3 +6,5 @@ config.toml
 
 # Byte pre-compiled
 /target
+*.swp
+*.swo

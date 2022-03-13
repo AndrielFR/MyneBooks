@@ -1,0 +1,6 @@
+pt-rBR:
+  language_name: Português
+  language_flag: 🇧🇷
+  texts:
+    start: |
+      Bem-vindo ao @{bot_username}, bot feito para aqueles que tem fome do saber, assim como a Myne.

@@ -80,7 +80,7 @@ async fn async_main() -> Result<(), Box<dyn Error>> {
     .await?;
     let me_user = client.get_me().await?;
     
-    // Log in if haven't already
+    // Sign in if haven't already
     if !client.is_authorized().await? {
         client.bot_sign_in(&bot_token, api_id, &api_hash).await?;
         client.session().save_to_file("myne_books.session")?;

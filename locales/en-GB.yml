@@ -1,0 +1,6 @@
+en-GB:
+  language_name: English
+  language_flag: 🇬🇧
+  texts:
+    start: |
+      Welcome to the @{bot_username}, bot made to those who are hungry to know, just like Myne.

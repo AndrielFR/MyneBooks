@@ -8,10 +8,14 @@ use crate::handler::{Data, Register};
 #[macro_rules_attribute(dyn_async!)]
 async fn start<'fut>(data: &'fut Data) {
     let client = data.client;
-    let message = data.message;
+    let message = data.message.unwrap();
+    let lang = data.language;
+    let me = data.me;
+
     let chat = message.chat();
-    
-    client.send_message(&chat, message.text()).await
+
+    client.send_message(&chat, lang
+        .get_text("texts.start", vec![("bot_username", me.username().unwrap())])).await
         .expect("Failed to reply the message");
 }
 

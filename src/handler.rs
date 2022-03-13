@@ -14,7 +14,7 @@ use regex::Regex;
 use log::info;
 
 use crate::handlers;
-// use crate::database;
+use crate::language;
 use crate::database::tables;
 
 
@@ -40,9 +40,11 @@ macro_rules! dyn_async {(
 
 pub struct Data<'a> {
     pub client: &'a Client,
-    pub message: &'a types::Message,
-    // pub callback: &'a types::Callback,
-    // pub inline: &'a types::Inline,
+    pub message: Option<&'a types::Message>,
+    // pub callback: Option<&'a types::Callback>,
+    // pub inline: Option<&'a types::Inline>,
+    pub language: language::I18n<'a>,
+    pub me: &'a types::User,
 }
 
 #[derive(Clone)]
@@ -69,11 +71,11 @@ impl<'a> Register<'a> {
             handler_list: vec![],
         }
     }
-    
+
     pub fn build(self) -> Self {
         self
     }
-    
+
     pub fn append(mut self, update_type: &'a str, function: AsyncFunction, pattern: &'a str, is_command: bool, description: Option<&'a str>, hide: Option<bool>) -> Self {
         let handler = Handler {
             update_type: update_type,
@@ -83,38 +85,38 @@ impl<'a> Register<'a> {
             description: description,
             hide: hide,
         };
-        
+
         self.handler_list.push(handler);
-        
+
         self
     }
-    
+
     pub fn remove(mut self, index: usize) -> Self {
         self.handler_list.remove(index);
-        
+
         self
     }
-    
+
     pub fn set_name(mut self, name: &'a str) -> Self {
         self.name = name;
-        
+
         self
     }
-    
+
     pub fn set_enabled(mut self, enabled: bool) -> Self {
         self.enabled = enabled;
-        
+
         self
     }
-    
+
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
-    
+
     pub fn get_name(&self) -> &'a str {
         &self.name
     }
-    
+
     pub fn get_handler_list(self) -> Vec<Handler<'a>> {
         self.handler_list
     }
@@ -127,7 +129,7 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
     ] {
         if plugin_register.is_enabled() {
             info!("Loading plugin '{}'", plugin_register.get_name());
-            
+
             for plugin_handler in plugin_register.get_handler_list() {
                 handler_list.push(plugin_handler);
             }
@@ -135,16 +137,15 @@ pub fn initialize<'a>(handler_list: &mut Vec<Handler<'a>>) -> Result<(), Box<dyn
             info!("Plugin '{}' is disabled, passing...", plugin_register.get_name());
         }
     }
-    
+
     Ok(())
 }
 
 pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list: Vec<Handler<'a>>, prefixes: Vec<String>, me: types::User) -> Result<(), Box<dyn Error>> {
-    // let dbc = database::connect().unwrap();
-    // let conn = dbc.get_conn();
-    
     match update {
         Update::NewMessage(ref message) if !message.outgoing() => {
+            let mut lang = language::I18n::default();
+
             let chat = message.chat();
             match chat {
                 types::Chat::User(user) => {
@@ -154,6 +155,8 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
                             tables::User::register(user.id(), user.full_name(), user.lang_code());
                         }
                     }
+
+                    lang = language::from_user(user.id());
                 }
                 types::Chat::Group(group) => {
                     match tables::Group::get(group.id()) {
@@ -162,25 +165,27 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
                             tables::Group::register(group.id(), group.title());
                         }
                     }
+
+                    lang = language::from_group(group.id());
                 }
                 types::Chat::Channel(channel) => {}
             }
-            
+
             let message_handlers = handler_list.iter()
                 .filter(|handler| handler.update_type == "message");
             for handler in message_handlers {
                 let function = handler.function;
                 let is_command = handler.is_command;
                 let mut pattern = String::from(handler.pattern);
-                
+
                 if is_command {
                     let mut has_final_line = false;
-                    
+
                     if pattern.ends_with("$") {
                         pattern.pop();
                         has_final_line = true;
                     }
-                    
+
                     let pattern_clone = pattern.clone();
                     let pattern_splitted: Vec<&str> = pattern_clone
                         .split_whitespace()
@@ -190,28 +195,30 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
                         pattern.push_str(&pattern_splitted[..1]
                             .join(" "));
                     }
-                    
+
                     pattern.push_str(format!("(?:@{})?", me.username().unwrap()).as_str());
-                    
+
                     pattern.insert_str(0, format!("[{}]", prefixes.join("")).as_str());
-                    
+
                     let pattern_parts = &pattern_splitted[1..];
                     for part in pattern_parts {
                         pattern.push_str(format!(" {}", part).as_str());
                     }
-                    
+
                     if has_final_line {
                         pattern.push_str("$");
                     }
                 }
-                
+
                 let pattern = pattern.as_str();
-                
+
                 let re = Regex::new(pattern).unwrap();
                 if re.is_match(message.text()) {
                     let data = Data {
                         client: &mut client,
-                        message: message,
+                        message: Some(message),
+                        language: lang,
+                        me: &me,
                     };
                     function(&data).await;
                 }
@@ -219,6 +226,6 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
         }
         _ => {}
     }
-    
+
     Ok(())
 }
