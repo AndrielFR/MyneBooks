@@ -5,7 +5,7 @@ use grammers_client::{InputMessage, types};
 
 use crate::utils;
 use crate::dyn_async;
-use crate::handler::{Data, Register};
+use crate::handler::{Data, HandlerOptions, Register};
 use crate::language::I18n;
 
 
@@ -46,7 +46,7 @@ pub fn initialize<'a>() -> Register<'a> {
     Register::new()
         .set_name("about")
         .set_enabled(true)
-        .append("message", about_message, "about$", true, Some("See about the bot"), Some(false))
-        .append("callback", about_callback, "about$", false, None, None)
+        .append("message", about_message, "about$", Some(HandlerOptions { is_command: true, description: Some("See about the bot"), ..Default::default() }))
+        .append("callback", about_callback, "about$", None)
         .build()
 }
