@@ -5,7 +5,7 @@ use grammers_client::{InputMessage};
 
 use crate::utils;
 use crate::dyn_async;
-use crate::handler::{Data, Register};
+use crate::handler::{Data, HandlerOptions, Register};
 
 
 #[macro_rules_attribute(dyn_async!)]
@@ -30,6 +30,6 @@ pub fn initialize<'a>() -> Register<'a> {
     Register::new()
         .set_name("start")
         .set_enabled(true)
-        .append("message", start_message, "start$", true, Some("Start the bot"), Some(false))
+        .append("message", start_message, "start$", Some(HandlerOptions { is_command: true, description: Some("Start the bot"), ..Default::default() }))
         .build()
 }

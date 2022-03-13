@@ -52,9 +52,24 @@ pub struct Handler<'a> {
     update_type: &'a str,
     function: AsyncFunction,
     pattern: &'a str,
-    is_command: bool,
-    description: Option<&'a str>,
-    hide: Option<bool>,
+    options: Option<HandlerOptions<'a>>,
+}
+
+#[derive(Clone, Copy)]
+pub struct HandlerOptions<'a> {
+    pub is_command: bool,
+    pub description: Option<&'a str>,
+    pub hide: bool,
+}
+
+impl<'a> Default for HandlerOptions<'a> {
+    fn default() -> Self {
+        Self {
+            is_command: false,
+            description: None,
+            hide: true,
+        }
+    }
 }
 
 pub struct Register<'a> {
@@ -76,14 +91,12 @@ impl<'a> Register<'a> {
         self
     }
 
-    pub fn append(mut self, update_type: &'a str, function: AsyncFunction, pattern: &'a str, is_command: bool, description: Option<&'a str>, hide: Option<bool>) -> Self {
+    pub fn append(mut self, update_type: &'a str, function: AsyncFunction, pattern: &'a str, options: Option<HandlerOptions<'a>>) -> Self {
         let handler = Handler {
             update_type: update_type,
             function: function,
             pattern: pattern,
-            is_command: is_command,
-            description: description,
-            hide: hide,
+            options: options,
         };
 
         self.handler_list.push(handler);
@@ -176,11 +189,11 @@ pub async fn handle_update<'a>(mut client: Client, update: Update, handler_list:
             let message_handlers = handler_list.iter()
                 .filter(|handler| handler.update_type == "message");
             for handler in message_handlers {
+                let options = handler.options.unwrap_or_default();
                 let function = handler.function;
-                let is_command = handler.is_command;
                 let mut pattern = String::from(handler.pattern);
 
-                if is_command {
+                if options.is_command {
                     let mut has_final_line = false;
 
                     if pattern.ends_with("$") {
