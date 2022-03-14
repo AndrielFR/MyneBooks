@@ -13,9 +13,9 @@ categories = []
 edition = "2021"
 
 [dependencies]
-grammers-client = { git = "https://github.com/Lonami/grammers", features = ["html"] }
-grammers-session = { git = "https://github.com/Lonami/grammers" }
-grammers-tl-types = { git = "https://github.com/Lonami/grammers" }
+grammers-client = { git = "https://github.com/AndrielFR/grammers", features = ["html"] }
+grammers-session = { git = "https://github.com/AndrielFR/grammers" }
+grammers-tl-types = { git = "https://github.com/AndrielFR/grammers" }
 tokio = { version = "^1.17", features = ["macros", "sync", "rt", "rt-multi-thread", "signal"] }
 rusqlite = "^0.26"
 log = { version = "^0.4", features = ["std"] }
